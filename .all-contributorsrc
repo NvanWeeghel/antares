@@ -365,6 +365,25 @@
       "contributions": [
         "translation"
       ]
+    },
+    {
+      "login": "mikethms",
+      "name": "Mike Thomas",
+      "avatar_url": "https://avatars.githubusercontent.com/u/25726471?v=4",
+      "profile": "https://github.com/mikethms",
+      "contributions": [
+        "maintenance",
+        "infra"
+      ]
+    },
+    {
+      "login": "NvanWeeghel",
+      "name": "Niek van Weeghel",
+      "avatar_url": "https://avatars.githubusercontent.com/u/131269144?v=4",
+      "profile": "https://github.com/NvanWeeghel",
+      "contributions": [
+        "infra"
+      ]
     }
   ],
   "contributorsPerLine": 7,

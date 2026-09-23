@@ -351,6 +351,8 @@ export const enUS = {
       missingOrIncompleteTranslation: 'Missing or incomplete translation?',
       findOutHowToContribute: 'Find out how to contribute',
       reportABug: 'Report a bug',
+      originalProject: 'Original project',
+      forkMaintainedBy: 'Fork maintained by',
       nextTab: 'Next tab',
       previousTab: 'Previous tab',
       selectTabNumber: 'Select tab number {param}',

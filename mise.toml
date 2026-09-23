@@ -1,2 +1,9 @@
 [tools]
 node = "20"
+
+[tasks.build_mac]
+run = '''
+npm install
+npm install "dmg-license" --save-optional
+npm run build
+'''

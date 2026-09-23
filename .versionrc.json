@@ -3,5 +3,7 @@
     {"type":"feat","section":"Features"},
     {"type":"perf","section":"Improvements"},
     {"type":"fix","section":"Bug Fixes"}
-  ]
+  ],
+  "commitUrlFormat": "https://github.com/mikethms/antares/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/mikethms/antares/compare/{{previousTag}}...{{currentTag}}"
 }

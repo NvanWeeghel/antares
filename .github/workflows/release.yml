@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-as:
+        description: 'patch, minor, major or an exact version (e.g. 0.7.37). Leave empty to derive it from the commit messages.'
+        required: false
+        default: 'patch'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          # standard-version needs the full history and tags to build the changelog
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version, update changelog, commit and tag
+        id: bump
+        env:
+          RELEASE_AS: ${{ inputs.release-as }}
+        run: |
+          args=()
+          if [ -n "$RELEASE_AS" ]; then
+            args+=(--release-as "$RELEASE_AS")
+          fi
+
+          # Work out the version first, so an existing tag fails before anything is committed
+          npx --yes standard-version@9.3.2 --dry-run "${args[@]}" > dry-run.txt
+          version=$(sed -n 's/.*bumping version in package.json from .* to \(.*\)$/\1/p' dry-run.txt)
+          if [ -z "$version" ]; then
+            cat dry-run.txt
+            echo "::error::Could not determine the next version"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
+            echo "::error::Tag v$version already exists. Run again with a higher version in 'release-as'."
+            exit 1
+          fi
+
+          npx --yes standard-version@9.3.2 "${args[@]}"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Push release commit and tag
+        run: git push --follow-tags origin HEAD:master
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: gh release create "$TAG" --title "$TAG" --verify-tag --generate-notes
+
+  # A release created with GITHUB_TOKEN does not trigger other workflows, so call the build directly
+  macos:
+    needs: release
+    uses: ./.github/workflows/release-macos.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}

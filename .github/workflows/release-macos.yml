@@ -8,6 +8,12 @@ on:
       tag:
         description: 'Existing release tag to build and attach the DMG to (e.g. v0.7.35)'
         required: true
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach the DMG to'
+        type: string
+        required: true
 
 permissions:
   contents: write
@@ -28,6 +34,11 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 20
+
+      # Keep the app version (About screen, DMG name) in line with the release tag,
+      # even if package.json was not bumped before tagging
+      - name: Set version from release tag
+        run: npm version "${TAG#v}" --no-git-tag-version --allow-same-version
 
       # node-gyp needs distutils, which was removed in Python 3.12
       - name: Install Python

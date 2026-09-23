@@ -395,7 +395,7 @@
                            <a
                               class="c-hand"
                               :style="'align-items: center; display: inline-flex;'"
-                              @click="openOutside('https://github.com/antares-sql/antares')"
+                              @click="openOutside('https://github.com/mikethms/antares')"
                            ><BaseIcon
                               icon-name="mdiGithub"
                               class="d-inline mr-1"
@@ -403,21 +403,14 @@
                            /> GitHub</a> • <a
                               class="c-hand"
                               :style="'align-items: center; display: inline-flex;'"
-                              @click="openOutside('https://fosstodon.org/@AntaresSQL')"
+                              @click="openOutside('https://github.com/antares-sql/antares')"
                            ><BaseIcon
-                              icon-name="mdiMastodon"
+                              icon-name="mdiSourceFork"
                               class="d-inline mr-1"
                               :size="16"
-                           /> Mastodon</a> • <a
-                              class="c-hand"
-                              :style="'align-items: center; display: inline-flex;'"
-                              @click="openOutside('https://antares-sql.app/')"
-                           ><BaseIcon
-                              icon-name="mdiWeb"
-                              class="d-inline mr-1"
-                              :size="16"
-                           /> Website</a><br>
+                           /> {{ t('application.originalProject') }}</a><br>
                            <small>{{ t('general.author') }} <a class="c-hand" @click="openOutside('https://github.com/Fabio286')">{{ appAuthor }}</a></small><br>
+                           <small>{{ t('application.forkMaintainedBy') }} <a class="c-hand" @click="openOutside('https://github.com/mikethms')">Mike Thomas</a></small><br>
                         </p>
                         <div class="mb-2">
                            <small class="d-block text-uppercase">{{ t('general.contributors') }}:</small>

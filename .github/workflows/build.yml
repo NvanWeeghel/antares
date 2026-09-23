@@ -10,6 +10,8 @@ env:
 
 jobs:
   release:
+    # Only run in the upstream repo; this fork releases macOS via release-macos.yml
+    if: github.repository == 'antares-sql/antares'
     runs-on: ${{ matrix.os }}
 
     strategy:

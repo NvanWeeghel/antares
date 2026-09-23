@@ -1,0 +1,52 @@
+name: Release [MAC]
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and attach the DMG to (e.g. v0.7.35)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      # node-gyp needs distutils, which was removed in Python 3.12
+      - name: Install Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install "dmg-license" --save-optional
+
+      - name: Build
+        run: npm run build
+        env:
+          # No Developer ID certificate available, skip looking for one
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload DMG to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG" build/*.dmg --clobber

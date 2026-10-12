@@ -13,8 +13,8 @@ const persistentStore = new Store({
    }
 });
 
-const isMacOS = process.platform === 'darwin';
 let mainWindow: Electron.IpcMainEvent;
+let isUpdateAvailable = false;
 autoUpdater.allowPrerelease = persistentStore.get('allow_prerelease', false) as boolean;
 
 export default () => {
@@ -22,12 +22,6 @@ export default () => {
       mainWindow = event;
       if (process.windowsStore || (process.platform === 'linux' && !process.env.APPIMAGE))
          mainWindow.reply('no-auto-update');
-      else if (isMacOS) { // Unsigned app, it can't install updates, so only check and link to the download page
-         autoUpdater.autoDownload = false;
-         autoUpdater.checkForUpdates().catch(() => {
-            mainWindow.reply('check-failed');
-         });
-      }
       else {
          autoUpdater.checkForUpdatesAndNotify().catch(() => {
             mainWindow.reply('check-failed');
@@ -41,14 +35,13 @@ export default () => {
 
    // auto-updater events
    autoUpdater.on('checking-for-update', () => {
+      isUpdateAvailable = false;
       mainWindow.reply('checking-for-update');
    });
 
    autoUpdater.on('update-available', () => {
-      if (isMacOS)
-         mainWindow.reply('link-to-download');
-      else
-         mainWindow.reply('update-available');
+      isUpdateAvailable = true;
+      mainWindow.reply('update-available');
    });
 
    autoUpdater.on('update-not-available', () => {
@@ -61,6 +54,13 @@ export default () => {
 
    autoUpdater.on('update-downloaded', () => {
       mainWindow.reply('update-downloaded');
+   });
+
+   // A failed check is handled by the check-for-updates catch. When the download or install fails
+   // (e.g. macOS refuses an update for an unsigned build), link to the download page instead
+   autoUpdater.on('error', () => {
+      if (isUpdateAvailable)
+         mainWindow.reply('link-to-download');
    });
 
    log.transports.file.level = 'info';

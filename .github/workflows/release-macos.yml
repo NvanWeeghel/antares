@@ -51,14 +51,38 @@ jobs:
           npm install
           npm install "dmg-license" --save-optional
 
-      - name: Build
-        run: npm run build
+      - name: Check signing secrets
         env:
-          # No Developer ID certificate available, skip looking for one
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          MAC_CERTIFICATE: ${{ secrets.MAC_CERTIFICATE }}
+          MAC_CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=()
+          for name in MAC_CERTIFICATE MAC_CERTIFICATE_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repository secrets: ${missing[*]}"
+            exit 1
+          fi
 
-      # latest-mac.yml lets the app's update check find this release
-      - name: Upload DMG to release
+      # Signed with the Developer ID Application certificate and notarized, so Gatekeeper
+      # opens the app and the in-app updater can install new versions
+      - name: Build, sign and notarize
+        run: npm run build -- -c.mac.notarize.teamId="$APPLE_TEAM_ID"
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      # The DMG is for new installs; the in-app updater downloads the zip listed in latest-mac.yml
+      - name: Upload build to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$TAG" build/*.dmg build/latest-mac.yml --clobber
+        run: gh release upload "$TAG" build/*.dmg build/*.zip build/*.blockmap build/latest-mac.yml --clobber
